@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LineUp OTP Verification</title>
+  <style>
+    body {
+      font-family: Inter, sans-serif;
+      background-color: #f9fafb;
+      color: #111827;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 480px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+    .logo {
+      height: 40px;
+      margin-bottom: 24px;
+    }
+    .otp-box {
+      background: linear-gradient(to right, #3b82f6, #2dd4bf);
+      color: #ffffff;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 24px auto;
+      width: fit-content;
+    }
+    .footer {
+      margin-top: 32px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="cid:logo" alt="LineUp Logo" class="logo">
+
+    <h2>Verify your email</h2>
+    <p>Hi {{ user_name }},</p>
+    <p>Use the OTP code below to complete your login or signup process:</p>
+
+    <div class="otp-box">{{ otp_code }}</div>
+
+    <div class="footer">
+      If you didn’t request this, you can safely ignore this email.<br>
+      &copy; {{ year }} LineUp. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
