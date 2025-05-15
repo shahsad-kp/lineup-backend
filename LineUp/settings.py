@@ -22,7 +22,7 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-environ.Env.read_env(BASE_DIR/'.env')
+environ.Env.read_env(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -163,3 +163,7 @@ AUTH_USER_MODEL = 'User.User'
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', str, [])
 
 CORS_ALLOW_CREDENTIALS = True
+
+GOOGLE_CLIENT_ID = env.str('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = env.str('GOOGLE_CLIENT_SECRET')
+GOOGLE_REDIRECT_URI = env.str('GOOGLE_REDIRECT_URI')
