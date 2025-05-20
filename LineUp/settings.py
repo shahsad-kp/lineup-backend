@@ -27,7 +27,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='')
 
 DEBUG = env('DEBUG')
 
@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Authentication.apps.AuthenticationConfig',
     'User.apps.UserConfig',
-    'corsheaders'
+    'corsheaders',
+    'Calender.apps.CalenderConfig'
 ]
 
 MIDDLEWARE = [
@@ -83,10 +84,7 @@ WSGI_APPLICATION = 'LineUp.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': env.db_url("DATABASE_URL", default='sqlite:///db.sqlite3')
 }
 
 # Mail setup

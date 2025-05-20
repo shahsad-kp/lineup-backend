@@ -34,3 +34,8 @@ class User(AbstractUser):
     last_name = None
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
+        db_table = "user"
