@@ -1,8 +1,12 @@
 from django.urls import path
+from rest_framework.routers import DefaultRouter
 
-from Calender.apis import ConnectAccountView, GetCalendarAccounts
+from Calender.apis import CalendarAccountModelViewSet, CalendarModelViewSet, CalendarSettingsView
+
+router = DefaultRouter()
+router.register('accounts', CalendarAccountModelViewSet, basename='accounts')
+router.register('calendar', CalendarModelViewSet, basename='calendar')
 
 urlpatterns = [
-    path('connect/', ConnectAccountView.as_view(), name='connect'),
-    path('list-accounts/', GetCalendarAccounts.as_view(), name='list-accounts'),
-]
+                  path('calendar-settings/', CalendarSettingsView.as_view()),
+              ] + router.urls

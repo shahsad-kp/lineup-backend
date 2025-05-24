@@ -1,14 +1,13 @@
 import datetime
 from datetime import timedelta
-from typing import Tuple
+from urllib.parse import urlencode
 
-import jwt
 import requests
 from django.conf import settings
 
-from Calender.choices import CalendarProviderChoice
+from Calender.choices import CalendarProviderChoice, CalendarAccessChoice
 from Calender.exceptions import CalendarAlreadyExistsError
-from Calender.models import CalendarAccount
+from Calender.models import CalendarAccount, CalendarFetch, Calendar
 from User.models import User
 
 
@@ -17,8 +16,9 @@ class CalendarAPI:
     _refresh_token_expires = None
     _access_token = None
     provider: CalendarProviderChoice = None
+    account: CalendarAccount = None
 
-    def __init__(self,access_token: str, refresh_token: str, refresh_token_expires: datetime,  user: User, name: str):
+    def __init__(self, access_token: str, refresh_token: str, refresh_token_expires: datetime, user: User, name: str):
         self.user = user
         self.name = name
         self._access_token = access_token
@@ -39,7 +39,7 @@ class CalendarAPI:
             raise CalendarAlreadyExistsError(existing_calendar=existing_calendar.first())
         if not self.name:
             self.name = self._generate_name()
-        return CalendarAccount.objects.create(
+        self.account = CalendarAccount.objects.create(
             user=self.user,
             name=self.name,
             provider=self.provider,
@@ -47,12 +47,17 @@ class CalendarAPI:
             refresh_token_expires=self._refresh_token_expires,
             unique_id=unique_id,
         )
+        return self.account
 
     def _generate_access_token(self):
         raise NotImplementedError()
 
     def _get_unique_id(self) -> str:
         raise NotImplementedError()
+
+    def fetch_calendars(self):
+        raise NotImplementedError()
+
 
 class MicrosoftCalendarAPI(CalendarAPI):
     provider = CalendarProviderChoice.MICROSOFT
@@ -92,11 +97,39 @@ class MicrosoftCalendarAPI(CalendarAPI):
         return data
 
     def _get_unique_id(self) -> str:
-        return self._get_profile()['mail']
+        return self._get_profile()['id']
 
     def _generate_name(self) -> str:
         profile = self._get_profile()
         return f"{profile['displayName']} ({profile['mail']})"
+
+    def fetch_calendars(self):
+        url = 'https://graph.microsoft.com/v1.0/me/calendars'
+        headers = {
+            'Authorization': 'Bearer ' + self._access_token,
+        }
+        fetch_data = CalendarFetch.objects.create(account=self.account)
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        calendar_datas = data['value']
+        def get_access(calendar: dict):
+            if calendar.get('canEdit', False):
+                return CalendarAccessChoice.WRITER
+            return CalendarAccessChoice.READER
+
+        for calendar_data in calendar_datas:
+            Calendar.objects.create(
+                provider_id=calendar_data.get('id'),
+                user=self.user,
+                account=self.account,
+                access=get_access(calendar_data),
+                primary=calendar_data.get('isDefaultCalendar', False),
+                name=calendar_data.get('name'),
+                last_updated=fetch_data
+            )
+        fetch_data.complete()
+        return data
 
 
 class GoogleCalendarAPI(CalendarAPI):
@@ -130,15 +163,18 @@ class GoogleCalendarAPI(CalendarAPI):
     def _get_profile(self) -> dict[str, str]:
         if not self._access_token:
             self._generate_access_token()
-        url = "https://www.googleapis.com/oauth2/v1/userinfo"
-        response = requests.get(url, params={'access_token': self._access_token, 'alt': 'json'})
+        url = "https://openidconnect.googleapis.com/v1/userinfo"
+        response = requests.get(
+            url,
+            headers={"Authorization": f"Bearer {self._access_token}"}
+        )
         response.raise_for_status()
         data = response.json()
         return data
 
     def _get_unique_id(self) -> str:
         data = self._get_profile()
-        return data['id']
+        return data['sub']
 
     def _generate_name(self) -> str:
         data = self._get_profile()
@@ -156,3 +192,47 @@ class GoogleCalendarAPI(CalendarAPI):
         response.raise_for_status()
         data = response.json()
         self._access_token = data['access_token']
+
+    def fetch_calendars(self):
+        endpoint = 'https://www.googleapis.com/calendar/v3/users/me/calendarList'
+        headers = {"Authorization": f"Bearer {self._access_token}"}
+        fetch_data = CalendarFetch.objects.create(
+            account=self.account,
+        )
+        response = requests.get(
+            endpoint,
+            headers=headers,
+        )
+        data = response.json()
+        page_token = data.get('nextPageToken')
+        calendar_datas = data.get('items', [])
+        while page_token:
+            query = {
+                'pageToken': page_token
+            }
+            url = f"{endpoint}?{urlencode(query)}"
+            response = requests.get(
+                url,
+                headers=headers,
+            )
+            data = response.json()
+            page_token = data.get('nextPageToken')
+            calendar_datas.extend(data.get('items', []))
+        fetch_data.complete()
+        calendar_role_map = {
+            'freeBusyReader': CalendarAccessChoice.READER,
+            'reader': CalendarAccessChoice.READER,
+            'writer': CalendarAccessChoice.WRITER,
+            'owner': CalendarAccessChoice.WRITER,
+        }
+        for calendar_data in calendar_datas:
+            Calendar.objects.create(
+                provider_id=calendar_data.get('id'),
+                user=self.user,
+                account=self.account,
+                access=calendar_role_map[calendar_data.get('accessRole')],
+                primary=calendar_data.get('primary', False),
+                name=calendar_data.get('summary'),
+                last_updated=fetch_data
+            )
+        return calendar_datas
