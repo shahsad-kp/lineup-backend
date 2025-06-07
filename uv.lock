@@ -117,6 +117,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-timezone-field"
+version = "7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/5b/0dbe271fef3c2274b83dbcb1b19fa3dacf1f7e542382819294644e78ea8b/django_timezone_field-7.1.tar.gz", hash = "sha256:b3ef409d88a2718b566fabe10ea996f2838bc72b22d3a2900c0aa905c761380c", size = 13727, upload-time = "2025-01-11T17:49:54.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/09/7a808392a751a24ffa62bec00e3085a9c1a151d728c323a5bab229ea0e58/django_timezone_field-7.1-py3-none-any.whl", hash = "sha256:93914713ed882f5bccda080eda388f7006349f25930b6122e9b07bf8db49c4b4", size = 13177, upload-time = "2025-01-11T17:49:52.142Z" },
+]
+
+[[package]]
 name = "djangorestframework"
 version = "3.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -262,6 +274,7 @@ dependencies = [
     { name = "django-cors-headers" },
     { name = "django-environ" },
     { name = "django-filter" },
+    { name = "django-timezone-field" },
     { name = "djangorestframework" },
     { name = "djangorestframework-camel-case" },
     { name = "djangorestframework-simplejwt" },
@@ -277,6 +290,7 @@ requires-dist = [
     { name = "django-cors-headers", specifier = ">=4.7.0" },
     { name = "django-environ", specifier = ">=0.12.0" },
     { name = "django-filter", specifier = ">=25.1" },
+    { name = "django-timezone-field", specifier = ">=7.1" },
     { name = "djangorestframework", specifier = ">=3.16.0" },
     { name = "djangorestframework-camel-case", specifier = ">=1.4.2" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.5.0" },

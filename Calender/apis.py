@@ -4,10 +4,11 @@ from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from Calender.models import CalendarAccount, Calendar, UserCalendarSettings
+from Calender.models import CalendarAccount, Calendar, UserCalendarSettings, ConflictCalendarGroup, Availability
 from Calender.permissions import CalendarAccountPermission
 from Calender.serializers import CalendarAccountSerializer, CalendarAccountEditSerializer, CalendarSerializer, \
-    CalendarAccountFullSerializer, CalendarSettingsSerializer
+    CalendarAccountFullSerializer, CalendarSettingsSerializer, ConflictCalendarGroupSerializer, \
+    AvailabilityCalendarSerializer
 
 
 class CalendarAccountModelViewSet(ModelViewSet):
@@ -42,6 +43,20 @@ class CalendarModelViewSet(ModelViewSet):
     def get_queryset(self):
         return Calendar.objects.filter(user=self.request.user)
 
+
+class ConflictCalendarModelViewSet(ModelViewSet):
+    permission_classes = [CalendarAccountPermission]
+    serializer_class = ConflictCalendarGroupSerializer
+
+    def get_queryset(self):
+        return ConflictCalendarGroup.objects.filter(user=self.request.user).prefetch_related('conflict_calendars')
+
+class AvailabilityModelViewSet(ModelViewSet):
+    permission_classes = [CalendarAccountPermission]
+    serializer_class = AvailabilityCalendarSerializer
+
+    def get_queryset(self):
+        return Availability.objects.filter(user=self.request.user)
 
 class CalendarSettingsView(GenericAPIView, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = CalendarSettingsSerializer

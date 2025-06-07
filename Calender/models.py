@@ -1,10 +1,12 @@
 import datetime
 from uuid import uuid4
 
-from django.db.models import Model, UUIDField, ForeignKey, CASCADE, CharField, DateTimeField, SET_NULL, OneToOneField
-from django.db.models.fields import TextField, BooleanField, IntegerField
+from django.db.models import Model, UUIDField, ForeignKey, CASCADE, CharField, DateTimeField, SET_NULL, OneToOneField, \
+    IntegerField, TextField, BooleanField, JSONField
+from timezone_field import TimeZoneField
 
 from Calender.choices import CalendarProviderChoice, CalendarAccessChoice, FetchStatusChoice
+from Calender.utils import week_availability_default
 
 
 class CalendarAccount(Model):
@@ -72,6 +74,50 @@ class CalendarFetch(Model):
             self.sync_token = sync_token
         self.save()
 
+class ConflictCalendarGroup(Model):
+    id = UUIDField(primary_key=True, default=uuid4, editable=False)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+    user = ForeignKey('User.User', on_delete=CASCADE, related_name='conflict_calendars_groups')
+
+    class Meta:
+        db_table = 'conflict_calendars_groups'
+        verbose_name = 'Conflict Calendar Group'
+        verbose_name_plural = 'Conflict Calendar Groups'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Conflict Calendar Group #{self.id}"
+
+class ConflictCalendar(Model):
+    id = UUIDField(primary_key=True, default=uuid4, editable=False)
+    calendar = ForeignKey('Calendar', on_delete=CASCADE, related_name='conflict_calendars')
+    calendar_group = ForeignKey('ConflictCalendarGroup', on_delete=CASCADE, related_name='conflict_calendars')
+
+    class Meta:
+        db_table = 'conflict_calendars'
+        verbose_name = 'Conflict Calendar'
+        verbose_name_plural = 'Conflict Calendars'
+        unique_together = (('calendar', 'calendar_group'),)
+
+class Availability(Model):
+    id = UUIDField(primary_key=True, default=uuid4, editable=False)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+    user = ForeignKey('User.User', on_delete=CASCADE, related_name='availabilities')
+    timezone = TimeZoneField()
+    weekly_availability = JSONField(default=week_availability_default)
+    individual_days_availability = JSONField(default=dict)
+
+    class Meta:
+        db_table = 'availability'
+        verbose_name = 'Availability'
+        verbose_name_plural = 'Availabilities'
+        ordering = ['-user']
+
+    def __str__(self):
+        return f"{self.user} on {self.created_at}"
+
 
 class UserCalendarSettings(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -80,6 +126,18 @@ class UserCalendarSettings(Model):
         'Calendar',
         on_delete=SET_NULL,
         related_name='default_event_calendar',
+        null=True
+    )
+    default_availability_calendar = ForeignKey(
+        'Availability',
+        on_delete=SET_NULL,
+        related_name='default_availability_calendar',
+        null=True
+    )
+    default_conflict_group = ForeignKey(
+        'ConflictCalendarGroup',
+        on_delete=SET_NULL,
+        related_name='default_conflict_group',
         null=True
     )
 
