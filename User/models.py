@@ -1,9 +1,11 @@
 import uuid
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import EmailField, CharField, UUIDField, BooleanField
+from django.db.models import EmailField, CharField, UUIDField, BooleanField, SmallIntegerField
 from django.utils.translation import gettext_lazy as _
+from timezone_field import TimeZoneField
 
+from User.choices import SetupProgressChoices
 from User.managers import UserManager
 
 
@@ -16,15 +18,15 @@ class User(AbstractUser):
     )
     email = EmailField(_("Email Address"), unique=True)
     is_email_verified = BooleanField(default=False)
-    timezone = CharField(
-        _("Timezone"),
-        max_length=150,
-        blank=True
-    )
+    timezone = TimeZoneField(use_pytz=True)
     verification_code = CharField(
         _("Verification Code"),
         max_length=128,
         blank=True
+    )
+    setup_progress = SmallIntegerField(
+        default=0,
+        choices=SetupProgressChoices
     )
 
     objects = UserManager()

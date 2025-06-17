@@ -4,12 +4,14 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField, DateTimeField, SerializerMethodField, ListField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
+from timezone_field.rest_framework import TimeZoneSerializerField
 
 from Calender.choices import CalendarProviderChoice
 from Calender.exceptions import CalendarAlreadyExistsError
 from Calender.integrations import GoogleCalendarAPI, MicrosoftCalendarAPI
 from Calender.models import CalendarAccount, Calendar, UserCalendarSettings, Availability, \
     ConflictCalendarGroup, ConflictCalendar
+from User.choices import SetupProgressChoices
 from User.models import User
 
 
@@ -34,24 +36,34 @@ class CalendarAccountSerializer(ModelSerializer):
         code = self.validated_data.get('code')
         name = self.validated_data.get('name')
         provider = self.validated_data.get('provider')
+        user: User = self.context['request'].user
         if provider == CalendarProviderChoice.GOOGLE:
             api = GoogleCalendarAPI.from_code(
                 code=code,
                 name=name,
-                user=self.context["request"].user,
+                user=user,
             )
         else:
             api = MicrosoftCalendarAPI.from_code(
                 code=code,
                 name=name,
-                user=self.context["request"].user,
+                user=user,
             )
         try:
             self.instance = api.save()
+            if user.setup_progress == SetupProgressChoices.CONNECT_ACCOUNTS:
+                user.setup_progress = SetupProgressChoices.EVENT_CALENDAR
+                user.save()
             api.fetch_calendars()
         except CalendarAlreadyExistsError as e:
             self.instance = e.existing_calendar
         return self.instance
+
+    def create(self, validated_data):
+        account = super().create(validated_data)
+        user: User = self.context["request"].user
+
+        return account
 
 
 class CalendarAccountEditSerializer(ModelSerializer):
@@ -160,6 +172,8 @@ class ConflictCalendarGroupSerializer(ModelSerializer):
 
 
 class AvailabilityCalendarSerializer(ModelSerializer):
+    timezone = TimeZoneSerializerField(use_pytz=True)
+
     class Meta:
         model = Availability
         fields = [
@@ -171,10 +185,12 @@ class AvailabilityCalendarSerializer(ModelSerializer):
             'individual_days_availability'
         ]
 
+    def save(self, **kwargs):
+        user: User = self.context["request"].user
+        return super().save(user=user, **kwargs)
+
 
 class CalendarSettingsSerializer(ModelSerializer):
-    default_availability_calendar = AvailabilityCalendarSerializer()
-
     class Meta:
         model = UserCalendarSettings
         fields = [
@@ -182,3 +198,20 @@ class CalendarSettingsSerializer(ModelSerializer):
             'default_availability_calendar',
             'default_conflict_group'
         ]
+
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+        user: User = self.context["request"].user
+        progress_updated = False
+        if 'default_availability_calendar' in self.validated_data and user.setup_progress <= SetupProgressChoices.AVAILABILITY_CALENDAR:
+            user.setup_progress = SetupProgressChoices.COMPLETED
+            progress_updated = True
+        elif 'default_conflict_group' in self.validated_data and user.setup_progress <= SetupProgressChoices.CONFLICT_CALENDAR:
+            user.setup_progress = SetupProgressChoices.AVAILABILITY_CALENDAR
+            progress_updated = True
+        elif 'default_event_calendar' in self.validated_data and user.setup_progress <= SetupProgressChoices.EVENT_CALENDAR:
+            user.setup_progress = SetupProgressChoices.CONFLICT_CALENDAR
+            progress_updated = True
+        if progress_updated:
+            user.save()
+        return instance
