@@ -8,12 +8,15 @@ from rest_framework.fields import EmailField, CharField
 from rest_framework.serializers import Serializer, ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from timezone_field.rest_framework import TimeZoneSerializerField
 
 from LineUp.utils.mail_utils import send_otp_email
 from User.models import User
 
 
 class UserSerializer(ModelSerializer):
+    timezone = TimeZoneSerializerField(use_pytz=True)
+
     class Meta:
         model = User
         fields = [
@@ -22,7 +25,8 @@ class UserSerializer(ModelSerializer):
             'full_name',
             'is_email_verified',
             'is_active',
-            'timezone'
+            'timezone',
+            'setup_progress'
         ]
 
 
