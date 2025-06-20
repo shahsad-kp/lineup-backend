@@ -21,7 +21,6 @@ class EventType(Model):
     availability_calendar = ForeignKey(Availability, on_delete=SET_NULL, null=True, blank=True)
     conflict_calendar = ForeignKey(ConflictCalendar, on_delete=SET_NULL, null=True, blank=True)
 
-
     class Meta:
         db_table = 'event_type'
         verbose_name = 'Event Type'
@@ -67,15 +66,15 @@ class EventTypeDurations(Model):
         return self.duration.__str__()
 
 
-class EventLocations(Model):
+class EventTypeLocations(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)
     event_type = ForeignKey(EventType, on_delete=CASCADE, related_name='locations', related_query_name='ls')
     location_type = CharField(max_length=100, choices=EventLocationOptions)
-    location_data = JSONField(default=dict)
+    location_data = JSONField(default=dict, blank=True, null=True)
     is_default = BooleanField(default=False)
 
     class Meta:
-        db_table = 'event_locations'
+        db_table = 'event_type_locations'
         verbose_name = 'Event Locations'
         verbose_name_plural = 'Event Locations'
         ordering = ['event_type', 'location_type']
@@ -89,7 +88,7 @@ class EventLocations(Model):
 
     def clean(self):
         if self.is_default:
-            existing_default = EventLocations.objects.filter(
+            existing_default = EventTypeLocations.objects.filter(
                 event_type=self.event_type,
                 is_default=True
             )
