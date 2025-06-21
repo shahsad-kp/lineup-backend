@@ -40,7 +40,10 @@ class EventType(Model):
                 counter += 1
         return super().save(*args, **kwargs)
 
-
+    @property
+    def page_url(self):
+        # note: this needs to be adjusted using user's domain or site configuration
+        return f"/event-type/{self.page_slug}/"
 
 class EventTypeDurations(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)

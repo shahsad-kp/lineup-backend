@@ -38,7 +38,8 @@ class EventTypeSerializer(ModelSerializer):
             'owner',
             'visibility',
             'durations',
-            'locations'
+            'locations',
+            'page_url'
         ]
         extra_kwargs = {
             'owner': {'read_only': True},
