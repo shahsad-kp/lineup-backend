@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'Authentication.apps.AuthenticationConfig',
     'User.apps.UserConfig',
     'corsheaders',
-    'Calender.apps.CalenderConfig'
+    'Calender.apps.CalenderConfig',
+    'Event.apps.EventConfig',
+    'EventType.apps.EventtypeConfig'
 ]
 
 MIDDLEWARE = [
