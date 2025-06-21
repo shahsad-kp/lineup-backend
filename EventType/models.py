@@ -2,7 +2,8 @@ from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db.models import Model, UUIDField, ForeignKey, CASCADE, SET_NULL, DateTimeField, CharField, DurationField, \
-    BooleanField, UniqueConstraint, Q, JSONField, TextField
+    BooleanField, UniqueConstraint, Q, JSONField, TextField, SlugField
+from django.utils.text import slugify
 
 from Calender.models import Calendar, Availability, ConflictCalendar
 from EventType.choices import EventTypeVisibility, EventLocationOptions
@@ -20,12 +21,25 @@ class EventType(Model):
     event_calendar = ForeignKey(Calendar, on_delete=SET_NULL, null=True, blank=True)
     availability_calendar = ForeignKey(Availability, on_delete=SET_NULL, null=True, blank=True)
     conflict_calendar = ForeignKey(ConflictCalendar, on_delete=SET_NULL, null=True, blank=True)
+    page_slug = SlugField(max_length=255, null=True, blank=False)
 
     class Meta:
         db_table = 'event_type'
         verbose_name = 'Event Type'
         verbose_name_plural = 'Event Types'
         ordering = ['-created_at']
+        unique_together = ('owner', 'page_slug')
+
+    def save(self, *args, **kwargs):
+        if not self.page_slug:
+            base_slug = slugify(self.name)
+            self.page_slug = base_slug
+            counter = 1
+            while EventType.objects.filter(owner=self.owner, page_slug=self.page_slug).exists():
+                self.page_slug = f"{base_slug}-{counter}"
+                counter += 1
+        return super().save(*args, **kwargs)
+
 
 
 class EventTypeDurations(Model):
