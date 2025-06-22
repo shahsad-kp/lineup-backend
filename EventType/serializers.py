@@ -1,10 +1,13 @@
 from rest_framework.serializers import ModelSerializer
 
+from EventType.fields import DurationInMinutesField
 from EventType.models import EventType, EventTypeDurations, EventTypeLocations
 from User.models import User
 
 
 class EventTypeDurationsSerializer(ModelSerializer):
+    duration = DurationInMinutesField()
+
     class Meta:
         model = EventTypeDurations
         fields = [
