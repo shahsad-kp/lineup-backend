@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
+from EventType.choices import EventLocationOptions
 from EventType.fields import DurationInMinutesField
 from EventType.models import EventType, EventTypeDurations, EventTypeLocations
 from User.models import User
@@ -23,9 +24,28 @@ class EventTypeLocationsSerializer(ModelSerializer):
         fields = [
             'id',
             'location_type',
-            'location_data',
             'is_default'
         ]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        extra_data = self.get_extra_data(instance)
+        extra_data.update(self.get_extra_data(instance))
+        return representation
+
+    @staticmethod
+    def get_extra_data(obj: EventTypeLocations):
+        location_type = obj.location_type
+        if location_type == EventLocationOptions.IN_PERSON:
+            return obj.location_data.get('address', '')
+        require_invitee_number = obj.location_data.get('require_invitee_number', False)
+        data = {
+            'require_invitee_number': require_invitee_number
+        }
+        if not require_invitee_number:
+            phone_number = obj.location_data.get('phone_number', '')
+            data['phone_number'] = phone_number
+        return data
 
 
 class EventTypeSerializer(ModelSerializer):
