@@ -55,7 +55,7 @@ class EventTypeDurations(Model):
         db_table = 'event_type_duration'
         verbose_name = 'Event Type Durations'
         verbose_name_plural = 'Event Type Durations'
-        ordering = ['-event_type', 'is_default', 'duration']
+        ordering = ['-event_type', '-is_default', 'duration']
         constraints = [
             UniqueConstraint(
                 fields=['event_type'],
@@ -94,7 +94,7 @@ class EventTypeLocations(Model):
         db_table = 'event_type_locations'
         verbose_name = 'Event Locations'
         verbose_name_plural = 'Event Locations'
-        ordering = ['event_type', 'location_type']
+        ordering = ['-event_type', '-is_default', 'location_type']
         constraints = [
             UniqueConstraint(
                 fields=['event_type'],
@@ -102,6 +102,48 @@ class EventTypeLocations(Model):
                 name='unique_default_location_per_event_type'
             )
         ]
+
+    @property
+    def address(self):
+        if self.location_type == EventLocationOptions.IN_PERSON:
+            return self.location_data.get('address', '')
+        return ''
+
+    @address.setter
+    def address(self, value):
+        if self.location_type != EventLocationOptions.IN_PERSON:
+            return
+        if self.location_data is None:
+            self.location_data = {}
+        self.location_data['address'] = value
+
+    @property
+    def require_invitee_number(self):
+        if self.location_type == EventLocationOptions.CALL:
+            return self.location_data.get('require_invitee_number', False)
+        return False
+
+    @require_invitee_number.setter
+    def require_invitee_number(self, value):
+        if self.location_type != EventLocationOptions.CALL:
+            return
+        if self.location_data is None:
+            self.location_data = {}
+        self.location_data['require_invitee_number'] = value
+
+    @property
+    def phone_number(self):
+        if self.location_type == EventLocationOptions.CALL:
+            return self.location_data.get('phone_number', '')
+        return ''
+
+    @phone_number.setter
+    def phone_number(self, value):
+        if self.location_type != EventLocationOptions.CALL:
+            return
+        if self.location_data is None:
+            self.location_data = {}
+        self.location_data['phone_number'] = value
 
     def clean(self):
         if self.is_default:
