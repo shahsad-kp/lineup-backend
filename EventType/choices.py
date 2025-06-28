@@ -10,5 +10,5 @@ class EventTypeVisibility(TextChoices):
 
 
 class EventLocationOptions(TextChoices):
-    IN_PERSON = 'in_person', _('In-person')
+    IN_PERSON = 'in-person', _('In-person')
     CALL = 'call', _('Call')
