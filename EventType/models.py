@@ -22,6 +22,8 @@ class EventType(Model):
     availability_calendar = ForeignKey(Availability, on_delete=SET_NULL, null=True, blank=True)
     conflict_calendar = ForeignKey(ConflictCalendar, on_delete=SET_NULL, null=True, blank=True)
     page_slug = SlugField(max_length=255, null=True, blank=False)
+    multi_event = ForeignKey('MultiEventType.MultiEventType', on_delete=CASCADE, null=True, blank=True,
+                             related_name='event_types')
 
     class Meta:
         db_table = 'event_type'
@@ -44,6 +46,7 @@ class EventType(Model):
     def page_url(self):
         # note: this needs to be adjusted using user's domain or site configuration
         return f"/event-type/{self.page_slug}/"
+
 
 class EventTypeDurations(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)
