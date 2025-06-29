@@ -17,7 +17,7 @@ class MultiEventType(Model):
     owner = ForeignKey(User, on_delete=CASCADE)
     visibility = CharField(max_length=100, choices=MultiEventVisibility, default=MultiEventVisibility.PUBLIC)
     page_slug = SlugField(max_length=255, null=True, blank=False)
-    events = ManyToManyField(
+    event_types = ManyToManyField(
         'EventType.EventType',
         related_name='multi_event',
         blank=True,
@@ -35,7 +35,7 @@ class MultiEventType(Model):
 
 
 class MultiEvents(Model):
-    multi_event_type = ForeignKey(MultiEventType, on_delete=CASCADE)
+    multi_event_type = ForeignKey(MultiEventType, on_delete=CASCADE, related_name='event_type_connections', related_query_name='connection')
     event_type = OneToOneField('EventType.EventType', on_delete=CASCADE)
     position = IntegerField(default=0)
     buffer_before = DurationField(default=timedelta(seconds=0))
