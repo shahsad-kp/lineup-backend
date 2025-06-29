@@ -1,3 +1,8 @@
 from django.contrib import admin
 
-# Register your models here.
+from MultiEventType.models import MultiEventType
+
+
+@admin.register(MultiEventType)
+class MultiEventTypeAdmin(admin.ModelAdmin):
+    pass
