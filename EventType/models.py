@@ -22,8 +22,6 @@ class EventType(Model):
     availability_calendar = ForeignKey(Availability, on_delete=SET_NULL, null=True, blank=True)
     conflict_calendar = ForeignKey(ConflictCalendar, on_delete=SET_NULL, null=True, blank=True)
     page_slug = SlugField(max_length=255, null=True, blank=False)
-    multi_event = ForeignKey('MultiEventType.MultiEventType', on_delete=CASCADE, null=True, blank=True,
-                             related_name='event_types')
 
     class Meta:
         db_table = 'event_type'
