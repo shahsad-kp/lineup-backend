@@ -45,6 +45,7 @@ class EventType(Model):
         # note: this needs to be adjusted using user's domain or site configuration
         return f"/event-type/{self.page_slug}/"
 
+
 class EventTypeDurations(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)
     event_type = ForeignKey(EventType, on_delete=CASCADE, related_name='durations', related_query_name='ds')

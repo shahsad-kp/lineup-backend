@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'Calender.apps.CalenderConfig',
     'Event.apps.EventConfig',
-    'EventType.apps.EventtypeConfig'
+    'EventType.apps.EventtypeConfig',
+    'MultiEventType.apps.MultieventtypeConfig'
 ]
 
 MIDDLEWARE = [
