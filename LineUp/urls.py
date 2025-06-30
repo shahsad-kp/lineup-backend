@@ -6,4 +6,5 @@ urlpatterns = [
     path('auth/', include('Authentication.urls')),
     path('', include('Calender.urls')),
     path('', include('EventType.urls')),
+    path('', include('MultiEventType.urls')),
 ]

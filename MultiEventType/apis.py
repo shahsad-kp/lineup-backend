@@ -2,12 +2,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from MultiEventType.models import MultiEventType
 from MultiEventType.permissions import MultiEventTypePermission
+from MultiEventType.serializers import MultiEventTypeSerializer
 
 
 class MultiEventTypeViewSet(ModelViewSet):
     queryset = MultiEventType.objects.all()
     permission_classes = (MultiEventTypePermission,)
-
+    serializer_class = MultiEventTypeSerializer
 
     def get_queryset(self):
         """
