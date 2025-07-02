@@ -35,6 +35,11 @@ class MultiEventType(Model):
     def __str__(self):
         return self.name
 
+    @property
+    def page_url(self):
+        # note: this needs to be adjusted using user's domain or site configuration
+        return f"/multi-event-types/{self.page_slug}/"
+
 
 class MultiEventConnection(Model):
     id = UUIDField(primary_key=True, default=uuid4, editable=False)

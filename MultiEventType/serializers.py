@@ -25,6 +25,6 @@ class MultiEventTypeSerializer(ModelSerializer):
             'description',
             'owner',
             'visibility',
-            'page_slug',
+            'page_url',
             'event_types'
         ]
