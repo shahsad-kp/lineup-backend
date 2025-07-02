@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.db.models import Model, UUIDField, DateTimeField, CharField, TextField, ForeignKey, CASCADE, \
     ManyToManyField, OneToOneField, IntegerField, DurationField, SlugField
 
+from EventType.choices import EventTypeVisibility
 from MultiEventType.choices import MultiEventVisibility
 from User.models import User
 
@@ -19,6 +20,7 @@ class MultiEventType(Model):
     page_slug = SlugField(max_length=255, null=True, blank=False)
     event_types = ManyToManyField(
         'EventType.EventType',
+        through='MultiEventConnection',
         related_name='multi_event',
         blank=True,
         help_text="Events associated with this multi-event type."
@@ -34,9 +36,13 @@ class MultiEventType(Model):
         return self.name
 
 
-class MultiEvents(Model):
-    multi_event_type = ForeignKey(MultiEventType, on_delete=CASCADE, related_name='event_type_connections', related_query_name='connection')
-    event_type = OneToOneField('EventType.EventType', on_delete=CASCADE)
+class MultiEventConnection(Model):
+    id = UUIDField(primary_key=True, default=uuid4, editable=False)
+    multi_event_type = ForeignKey(MultiEventType, on_delete=CASCADE, related_name='event_type_connections',
+                                  related_query_name='connection')
+    event_type = OneToOneField('EventType.EventType', on_delete=CASCADE,
+                               limit_choices_to={'visibility': EventTypeVisibility.INHERIT},
+                               related_name='multi_event_connection')
     position = IntegerField(default=0)
     buffer_before = DurationField(default=timedelta(seconds=0))
 
@@ -45,7 +51,7 @@ class MultiEvents(Model):
         verbose_name = 'Multi Event Connection'
         verbose_name_plural = 'Multi Event Connections'
         ordering = ['multi_event_type', 'position']
-        unique_together = ('multi_event_type', 'event_type')
+        unique_together = (('multi_event_type', 'event_type'), ('multi_event_type', 'position'))
 
     def __str__(self):
         return f"{self.multi_event_type.name} - {self.event_type.name} (Position: {self.position})"

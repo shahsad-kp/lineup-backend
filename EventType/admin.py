@@ -18,5 +18,6 @@ class EventLocationsStack(StackedInline):
 class EventTypeAdmin(admin.ModelAdmin):
     list_display = ('name', 'visibility', 'event_calendar')
     search_fields = ('name',)
+    list_filter = ('visibility',)
 
     inlines = [EventDurationStack, EventLocationsStack]

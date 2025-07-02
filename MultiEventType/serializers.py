@@ -1,15 +1,15 @@
 from rest_framework.serializers import ModelSerializer
 
 from EventType.serializers import EventTypeSerializer
-from MultiEventType.models import MultiEventType, MultiEvents
+from MultiEventType.models import MultiEventType, MultiEventConnection
 
 
 class MultiEventConnectionSerializer(ModelSerializer):
     event = EventTypeSerializer(source='event_type')
 
     class Meta:
-        model = MultiEvents
-        exclude = ('multi_event_type',)
+        model = MultiEventConnection
+        exclude = ('multi_event_type', 'event_type')
 
 
 class MultiEventTypeSerializer(ModelSerializer):
@@ -26,4 +26,5 @@ class MultiEventTypeSerializer(ModelSerializer):
             'owner',
             'visibility',
             'page_slug',
+            'event_types'
         ]

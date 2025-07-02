@@ -1,6 +1,5 @@
 from uuid import uuid4
 
-from django.core.exceptions import ValidationError
 from django.db.models import Model, UUIDField, ForeignKey, CASCADE, SET_NULL, DateTimeField, CharField, DurationField, \
     BooleanField, UniqueConstraint, Q, JSONField, TextField, SlugField
 from django.utils.text import slugify
@@ -64,21 +63,6 @@ class EventTypeDurations(Model):
                 name='unique_default_duration_per_event_type'
             )
         ]
-
-    def clean(self):
-        if self.is_default:
-            existing_default = EventTypeDurations.objects.filter(
-                event_type=self.event_type,
-                is_default=True
-            )
-            if self.pk:
-                existing_default = existing_default.exclude(pk=self.pk)
-            if existing_default.exists():
-                raise ValidationError("Only one default duration is allowed per event type.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.duration.__str__()
@@ -145,21 +129,6 @@ class EventTypeLocations(Model):
         if self.location_data is None:
             self.location_data = {}
         self.location_data['phone_number'] = value
-
-    def clean(self):
-        if self.is_default:
-            existing_default = EventTypeLocations.objects.filter(
-                event_type=self.event_type,
-                is_default=True
-            )
-            if self.pk:
-                existing_default = existing_default.exclude(pk=self.pk)
-            if existing_default.exists():
-                raise ValidationError("Only one default location is allowed per event location.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.location_type
