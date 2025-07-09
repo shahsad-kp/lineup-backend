@@ -13,6 +13,8 @@ class EventTypePermission(BasePermission):
         return True
 
     def has_object_permission(self, request: Request, view: ViewSet, obj: EventType):
+        if obj.owner == request.user:
+            return True
         if view.action in ['list', 'retrieve']:
             return obj.visibility == EventTypeVisibility.PUBLIC
-        return obj.owner == request.user
+        return False

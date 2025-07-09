@@ -1,15 +1,17 @@
 from rest_framework.serializers import ModelSerializer
 
 from EventType.serializers import EventTypeSerializer
+from LineUp.fields import DurationInMinutesField
 from MultiEventType.models import MultiEventType, MultiEventConnection
 
 
 class MultiEventConnectionSerializer(ModelSerializer):
-    event = EventTypeSerializer(source='event_type')
+    event_type = EventTypeSerializer()
+    buffer_before = DurationInMinutesField()
 
     class Meta:
         model = MultiEventConnection
-        exclude = ('multi_event_type', 'event_type')
+        exclude = ('multi_event_type',)
 
 
 class MultiEventTypeSerializer(ModelSerializer):
