@@ -7,7 +7,7 @@ from EventType.serializers import EventTypeSerializer
 
 
 class EventTypeModelViewSet(ModelViewSet):
-    queryset = EventType.objects.filter(visibility=EventTypeVisibility.INHERIT)
+    queryset = EventType.objects.exclude(visibility=EventTypeVisibility.INHERIT)
     permission_classes = (EventTypePermission,)
     serializer_class = EventTypeSerializer
 
