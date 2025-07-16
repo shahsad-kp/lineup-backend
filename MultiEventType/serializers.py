@@ -1,5 +1,7 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework.serializers import ModelSerializer
 
+from EventType.choices import EventTypeVisibility
 from EventType.serializers import EventTypeSerializer
 from LineUp.fields import DurationInMinutesField
 from MultiEventType.models import MultiEventType, MultiEventConnection
@@ -16,8 +18,8 @@ class MultiEventConnectionSerializer(ModelSerializer):
     @classmethod
     def create_connection(cls, data: dict) -> MultiEventConnection:
         event_type_data = data['event_type']
-        event_type = EventTypeSerializer.create_event(event_type_data)
-        multi_event_connection = MultiEventConnection.objects.create(event_type=event_type, **data)
+        data['event_type'] = EventTypeSerializer.create_event(event_type_data)
+        multi_event_connection = MultiEventConnection.objects.create(**data)
         return multi_event_connection
 
     def create(self, validated_data):
@@ -25,7 +27,7 @@ class MultiEventConnectionSerializer(ModelSerializer):
 
 
 class MultiEventTypeSerializer(ModelSerializer):
-    event_types = MultiEventConnectionSerializer(many=True, source='event_type_connections')
+    event_type_connections = MultiEventConnectionSerializer(many=True)
 
     class Meta:
         model = MultiEventType
@@ -38,16 +40,28 @@ class MultiEventTypeSerializer(ModelSerializer):
             'owner',
             'visibility',
             'page_url',
-            'event_types'
+            'event_type_connections'
         ]
+        extra_kwargs = {
+            'owner': {'read_only': True},
+            'page_url': {'read_only': True},
+        }
+
+    @staticmethod
+    def validate_event_types(event_types):
+        if not isinstance(event_types, list) or len(event_types) < 2:
+            raise ValidationError('At least two event types are required.')
+        return event_types
 
     @classmethod
     def create_multi_event_type(cls, data: dict) -> MultiEventType:
-        event_types_data = data.pop('event_types', [])
+        event_types_data = data.pop('event_type_connections', [])
         multi_event_type = MultiEventType.objects.create(**data)
 
         for event_type_data in event_types_data:
-            MultiEventConnectionSerializer.create_connection(event_type_data | {'multi_event_type': multi_event_type})
+            event_type_data['event_type']['owner'] = data['owner']
+            event_type_data['event_type']['visibility'] = EventTypeVisibility.INHERIT
+            MultiEventConnectionSerializer.create_connection({'multi_event_type': multi_event_type, **event_type_data})
 
         return multi_event_type
 
