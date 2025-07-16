@@ -66,4 +66,5 @@ class MultiEventTypeSerializer(ModelSerializer):
         return multi_event_type
 
     def create(self, validated_data):
+        validated_data['owner'] = self.context['request'].user
         return self.create_multi_event_type(validated_data)
