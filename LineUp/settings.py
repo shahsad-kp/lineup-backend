@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'Calender.apps.CalenderConfig',
     'Event.apps.EventConfig',
     'EventType.apps.EventtypeConfig',
-    'MultiEventType.apps.MultieventtypeConfig'
+    'MultiEventType.apps.MultieventtypeConfig',
+    'api_audit.apps.ApiAuditConfig'
 ]
 
 MIDDLEWARE = [
