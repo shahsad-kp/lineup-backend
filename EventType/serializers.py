@@ -2,9 +2,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import CharField, BooleanField
 from rest_framework.serializers import ModelSerializer
 
-from EventType.fields import DurationInMinutesField
 from EventType.models import EventType, EventTypeDurations, EventTypeLocations
-from User.models import User
+from LineUp.fields import DurationInMinutesField
 
 
 class EventTypeDurationsSerializer(ModelSerializer):
@@ -82,12 +81,12 @@ class EventTypeSerializer(ModelSerializer):
             'owner': {'read_only': True},
         }
 
-    def create(self, validated_data: dict) -> EventType:
-        durations_data = validated_data.pop('durations', [])
-        locations_data = validated_data.pop('locations', [])
-        user: User = self.context['request'].user
+    @classmethod
+    def create_event(cls, data: dict) -> EventType:
+        durations_data = data.pop('durations', [])
+        locations_data = data.pop('locations', [])
 
-        event_type = EventType.objects.create(owner=user, **validated_data)
+        event_type = EventType.objects.create(**data)
 
         for duration_data in durations_data:
             EventTypeDurations.objects.create(event_type=event_type, **duration_data)
@@ -96,6 +95,10 @@ class EventTypeSerializer(ModelSerializer):
             EventTypeLocations.objects.create(event_type=event_type, **location_data)
 
         return event_type
+
+    def create(self, validated_data: dict) -> EventType:
+        validated_data['owner'] = self.context['request'].user
+        return self.create_event(validated_data)
 
     def update(self, instance: EventType, validated_data: dict) -> EventType:
         durations_data = validated_data.pop('durations', [])

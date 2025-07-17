@@ -7,7 +7,7 @@ from EventType.serializers import EventTypeSerializer
 
 
 class EventTypeModelViewSet(ModelViewSet):
-    queryset = EventType.objects.filter(visibility=EventTypeVisibility.INHERIT)
+    queryset = EventType.objects.all()
     permission_classes = (EventTypePermission,)
     serializer_class = EventTypeSerializer
 
@@ -17,6 +17,6 @@ class EventTypeModelViewSet(ModelViewSet):
         """
         user = self.request.user
         queryset = super().get_queryset()
-        if user.is_superuser:
-            return queryset
+        if self.action == 'list':
+            queryset = queryset.exclude(visibility=EventTypeVisibility.INHERIT)
         return queryset.filter(owner=user)
