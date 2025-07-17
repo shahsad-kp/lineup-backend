@@ -22,8 +22,18 @@ class MultiEventConnectionSerializer(ModelSerializer):
         multi_event_connection = MultiEventConnection.objects.create(**data)
         return multi_event_connection
 
+    @staticmethod
+    def update_connection(instance: MultiEventConnection, validated_data: dict) -> MultiEventConnection:
+        instance.buffer_before = validated_data.get('buffer_before', instance.buffer_before)
+        instance.position = validated_data.get('position', instance.position)
+        instance.save()
+        return instance
+
     def create(self, validated_data):
         return self.create_connection(validated_data)
+
+    def update(self, instance, validated_data):
+        return self.update_connection(instance, validated_data)
 
 
 class MultiEventTypeSerializer(ModelSerializer):
@@ -65,6 +75,27 @@ class MultiEventTypeSerializer(ModelSerializer):
 
         return multi_event_type
 
-    def create(self, validated_data):
+    @staticmethod
+    def update_multi_event_type(instance: MultiEventType, validated_data: dict) -> MultiEventType:
+        event_types_data = validated_data.pop('event_type_connections', [])
+        instance.name = validated_data.get('name', instance.name)
+        instance.description = validated_data.get('description', instance.description)
+        instance.visibility = validated_data.get('visibility', instance.visibility)
+        instance.save()
+
+        # Update connections
+        for event_type_data in event_types_data:
+            connection_id = event_type_data.get('id')
+            if connection_id:
+                connection = MultiEventConnection.objects.get(id=connection_id, multi_event_type=instance)
+                MultiEventConnectionSerializer.update_connection(connection, event_type_data)
+            else:
+                MultiEventConnectionSerializer.create_connection({'multi_event_type': instance, **event_type_data})
+        return instance
+
+    def create(self, validated_data: dict) -> MultiEventType:
         validated_data['owner'] = self.context['request'].user
         return self.create_multi_event_type(validated_data)
+
+    def update(self, instance: MultiEventType, validated_data: dict) -> MultiEventType:
+        return self.update_multi_event_type(instance, validated_data)
