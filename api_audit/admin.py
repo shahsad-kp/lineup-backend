@@ -1,3 +1,12 @@
 from django.contrib import admin
 
-# Register your models here.
+from api_audit.models import APIRequestLog
+
+
+@admin.register(APIRequestLog)
+class APIRequestLogAdmin(admin.ModelAdmin):
+    list_filter = [
+        'method',
+        'status_code',
+        'user'
+    ]
