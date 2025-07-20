@@ -18,6 +18,7 @@ class APIRequestLog(Model):
     query_params = JSONField(null=True, blank=True)
     request_data = JSONField(null=True, blank=True)
     remote_ip = GenericIPAddressField(null=True, blank=True, db_index=True)
+    error_trace = TextField(null=True, blank=True)
 
     class Meta:
         db_table = "api_request_log"
