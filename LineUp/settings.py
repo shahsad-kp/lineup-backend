@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'Calender.apps.CalenderConfig',
     'Event.apps.EventConfig',
     'EventType.apps.EventtypeConfig',
-    'MultiEventType.apps.MultieventtypeConfig'
+    'MultiEventType.apps.MultieventtypeConfig',
+    'api_audit.apps.ApiAuditConfig'
 ]
 
 MIDDLEWARE = [
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'djangorestframework_camel_case.middleware.CamelCaseMiddleWare',
+    'api_audit.middlewares.DRFRequestLoggerMiddleware',
 ]
 
 ROOT_URLCONF = 'LineUp.urls'
